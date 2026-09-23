@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mindspend</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💸</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:#EAD5C3;color:#2B2E34;font:14px/1.45 Nunito,Fredoka,Quicksand,"SF Pro Rounded",Arial,sans-serif;font-weight:600;overflow-x:hidden}
+main{padding:0}
+.in{max-width:520px;margin:0 auto;padding:0 22px}
+.hd{background:#C2D1D9;padding-top:26px}
+.scene{display:block;width:100%;height:150px;margin-top:18px}
+.bd{background:#EAD5C3;padding:22px 0 130px}
+.lbl{font-size:12px;font-weight:600;color:#5A606A}
+.total{font-size:48px;font-weight:800;letter-spacing:-.5px;line-height:1.05;margin:4px 0 12px}
+.total .u{font-size:22px;font-weight:700;margin-left:4px;vertical-align:top;position:relative;top:6px}
+.clr{border:0;background:none;color:#2B2E34;font:inherit;font-size:18px;line-height:1;padding:4px 8px;margin-left:2px}
+input,select{font:inherit;font-weight:600;color:#2B2E34;background:#DCDFE3;border:0;border-radius:20px;padding:0 18px;height:44px;width:100%;outline:0}
+h2{font-size:24px;font-weight:700;margin:26px 0 10px}
+.row{background:#F4F6F7;border-radius:16px;margin-bottom:8px;padding:14px 18px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.n{font-size:14px;font-weight:600}
+.d{font-size:12px;font-weight:500;color:#5A606A}
+.amt{font-size:15px;font-weight:700;white-space:nowrap}
+.x{border:0;background:none;color:#5A606A;font:inherit;font-size:20px;line-height:1;padding:4px 8px}
+.armed{background:#35405A;color:#F4F6F7;border-radius:12px;font-size:12px;font-weight:700;padding:4px 10px}
+.pick{outline:2px solid #35405A}
+.empty{color:#5A606A;text-align:center;padding:30px 0}
+.tags{display:flex;gap:8px;flex-wrap:wrap}
+.tags:empty{display:none}
+.tag{border:0;background:#DCDFE3;color:#2B2E34;font:inherit;font-size:13px;font-weight:600;border-radius:20px;padding:7px 14px}
+.tag.on{background:#35405A;color:#F4F6F7}
+.fab{position:fixed;z-index:10;right:22px;bottom:calc(84px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:16px;border:0;background:#35405A;color:#F4F6F7;font:inherit;font-size:30px;font-weight:600;line-height:1;padding:0}
+.sheet{position:fixed;z-index:20;inset:0;background:rgba(45,50,59,.4);display:none;align-items:flex-end}
+.sheet.show{display:flex}
+.panel{background:#F4F6F7;width:100%;max-width:520px;margin:0 auto;border-radius:24px 24px 0 0;padding:22px 22px calc(22px + env(safe-area-inset-bottom,0px));display:grid;gap:10px}
+.go{border:0;background:#35405A;color:#F4F6F7;border-radius:20px;height:46px;font:inherit;font-weight:700;font-size:15px;margin-top:4px}
+.st{font-size:11px;font-weight:500;color:#5A606A;text-align:center;margin-top:22px}
+.dock{position:fixed;z-index:10;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));width:calc(100% - 32px);max-width:488px;height:56px;background:#2D323B;border-radius:20px;display:flex;align-items:center;padding:0 6px}
+.dock .seg{flex:1;min-width:0;border:0;background:none;color:#F4F6F7;opacity:.55;font:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;padding:0;margin:0}
+.dock svg{width:20px;height:20px;fill:currentColor;stroke:none}
+.dock span{font-size:10px;font-weight:600}
+.dock .seg.on{color:#ECA888;opacity:1}
+.cal{display:none}
+.dl{display:block;margin-bottom:16px}
+.dl span{display:block;font-size:12px;font-weight:600;color:#5A606A;margin:0 0 6px 6px}
+.bt{position:relative;height:8px;border-radius:4px;background:#F4F6F7}
+.bf{height:100%;border-radius:4px;background:#35405A}
+.bt.warn .bf{background:#ECA888}
+.bt.over .bf{background:#8C6D58}
+.bl{position:absolute;top:-4px;bottom:-4px;width:3px;background:#2B2E34}
+.bm{font-size:13px;font-weight:700;margin-top:8px}
+.bm.over,.overc{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+.bm.warn{color:#5A606A}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex:none}
+.sw-row{display:none;gap:8px;flex-wrap:wrap;margin:-4px 0 2px}
+.sw{width:26px;height:26px;border-radius:50%;border:2px solid transparent;padding:0}
+.sw.on{border-color:#2B2E34}
+h2 .coin{display:inline-flex;vertical-align:-4px;margin-right:4px}
+h2 .coin svg{width:20px;height:20px;fill:none;stroke:#2B2E34;stroke-width:1.6}
+.tagwrap{display:inline-flex;align-items:center;gap:2px;background:#F5F6F8;border-radius:999px;padding:2px}
+.tagwrap .tag{padding:6px 6px 6px 12px}
+.ec{border:0;background:none;color:#5A606A;font-size:13px;padding:4px 10px 4px 2px}
+.rn{display:none;gap:8px;align-items:center;margin:-2px 0 2px}
+.rn input{flex:1}
+#renameGo{border:0;background:#2B2E34;color:#fff;border-radius:999px;padding:0 16px;height:40px;font:inherit;font-weight:600}
+.implink{border:0;background:none;color:#5A606A;font:inherit;font-size:12px;text-decoration:underline;padding:6px}
+.sync{font-size:12px;font-weight:600;text-align:center;margin-top:14px;padding:6px 12px;border-radius:999px;display:inline-block}
+.sync.ok{color:#2f9e6b}
+.sync.bad{color:#fff;background:#E4572E}
+
+.authwrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.authbox{width:100%;max-width:360px}
+.authbox h1{font-size:32px;font-weight:800;margin:0 0 4px;letter-spacing:-.02em}
+.authbox p{color:#5A606A;font-size:14px;margin:0 0 22px}
+.authbox input{margin-bottom:10px}
+.autherr{color:#c0392b;font-size:13px;margin:-2px 0 10px;display:none}
+.authswitch{border:0;background:none;color:#35405A;font:inherit;font-size:13px;text-decoration:underline;margin-top:14px;display:block;width:100%;text-align:center}
+.authtop{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));right:16px;z-index:5}
+.authtop button{border:0;background:none;color:#5A606A;font:inherit;font-size:12px;text-decoration:underline}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<div class="authtop hidden" id="authtop"><button id="logout">Esci</button></div>
+
+<div class="authwrap" id="authwrap">
+  <div class="authbox">
+    <h1>Mindspend.</h1>
+    <p id="authsub">Accedi per vedere le tue spese.</p>
+    <input id="aemail" type="email" placeholder="Email" autocomplete="email">
+    <input id="apass" type="password" placeholder="Password" autocomplete="current-password">
+    <div class="autherr" id="autherr"></div>
+    <button class="go" id="ago">Accedi</button>
+    <button type="button" class="authswitch" id="aswitch">Non hai un account? Registrati</button>
+  </div>
+</div>
+
+<main class="hidden" id="app">
+<header class="hd"><div class="in">  <div class="lbl" id="plabel">Questo mese</div>
+  <div class="total" id="total">0 &euro;</div>
+
+  <div id="bud" style="margin:14px 0 4px"></div></div><svg class="scene" viewBox="0 0 400 150" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><circle cx="300" cy="58" r="20" fill="#ECA888"/><path d="M110 46q8-9 16 0q8-9 16 0" fill="none" stroke="#35405A" stroke-width="3" stroke-linecap="round"/><polygon points="0,110 70,84 140,106 200,88 270,110 340,94 400,108 400,150 0,150" fill="#DCDFE3"/><polygon points="0,116 60,100 120,116 0,116" fill="#8C6D58"/><rect y="110" width="400" height="40" fill="#35405A"/><path d="M20 122h50M120 128h70M240 122h60M320 129h50" stroke="#F4F6F7" stroke-width="2" opacity=".5"/></svg></header>
+<section class="bd"><div class="in">
+
+  <div class="cal" id="cal"><label class="dl"><span>Dal</span><input type="date" id="from"></label><label class="dl"><span>Al</span><input type="date" id="to"></label></div>
+  <div id="fbar" style="margin-top:12px"></div>
+  <div id="list"></div>
+  <div class="st" id="st"></div>
+  <div style="text-align:center;margin-top:8px"><button type="button" id="impbtn" class="implink">Importa spese da CSV</button><input type="file" id="imp" accept=".csv" style="display:none"></div>
+</div></section>
+</main>
+<nav class="dock hidden" id="dock"><button class="seg on" data-v="items"><svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M5 3h14v18l-2.5-1.7L14 21l-2-1.7L10 21l-2.5-1.7L5 21zM8 8h8v1.6H8zM8 12h6v1.6H8z"/></svg><span>Spese</span></button><button class="seg" data-v="cats"><svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M3 3h8l10 10-8 8L3 11zM7.5 6.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/></svg><span>Categorie</span></button><button class="seg" data-v="wish"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/></svg><span>Wishlist</span></button><button class="seg" data-v="budget"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M14.5 8.3A4.6 4.6 0 1014.5 15.7M7.2 10.4h6M7.2 13h5.2" fill="none" stroke="#F4F6F7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Budget</span></button><button class="seg" data-v="cal"><svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M7 2h2v2h6V2h2v2h2a2 2 0 012 2v13a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h2zM5 9v10h14V9z"/></svg><span>Calendario</span></button></nav>
+<button class="fab hidden" id="add" aria-label="Aggiungi spesa">+</button>
+<div class="sheet" id="sheet">
+  <div class="panel">
+    <input id="amt" type="number" inputmode="decimal" step="0.01" placeholder="Importo &euro;">
+    <input id="name" type="text" placeholder="Cosa hai comprato?">
+    <div class="tags" id="tags"></div>
+    <div class="sw-row" id="swatches"></div>
+    <div class="rn" id="renameBox"><input id="renameInput" type="text" placeholder="Nuovo nome categoria"><button type="button" id="renameGo">Rinomina</button></div>
+    <input id="cat" type="text" placeholder="Categoria (scegli sopra o scrivine una nuova)">
+    <input id="date" type="date">
+    <button class="go" id="save">Salva</button>
+  </div>
+</div>
+<script>
+const SUPABASE_URL = "https://yjsntbvypaksjuhxmiqk.supabase.co";
+const SUPABASE_KEY = "sb_publishable_x-OUMjTNr2O6Vx6lSRuDDA_USg3ZzPL";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $=id=>document.getElementById(id);
+const iso=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+const today=iso(new Date());
+const fmt=n=>n.toLocaleString("it-IT",{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})+" \u20ac";
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const hero=n=>n.toLocaleString("it-IT",{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})+" \u20ac";
+
+let items=[],view="items",catFilter=null,wishes=[],sel=new Set(),adding="exp",armKey=null,budget=null,editId=null,tagColors={},renamingCat=null,uid=null;
+const PALETTE=["#FF8A7A","#FFB84D","#FFD93D","#8CE99A","#3FD5C0","#5FB0FF","#8C9EFF","#C892FF","#FF8FC7","#FF6B6B"];
+
+function monthName(){const m=new Date().toLocaleDateString("it-IT",{month:"long"});return m.charAt(0).toUpperCase()+m.slice(1)}
+function dl(d){const x=new Date(d+"T00:00:00");return x.toLocaleDateString("it-IT",x.getFullYear()===new Date().getFullYear()?{day:"numeric",month:"short"}:{day:"numeric",month:"short",year:"numeric"})}
+
+function bounds(){
+  const f=$("from").value,t=$("to").value;
+  if(!f&&!t){const n=new Date();return[iso(new Date(n.getFullYear(),n.getMonth(),1)),today]}
+  return[f||"0000-01-01",t||today];
+}
+
+/* ---------- Supabase data layer ---------- */
+async function loadAll(){
+  const {data:exp}=await sb.from("expenses").select("*").order("date",{ascending:false});
+  items=(exp||[]).filter(x=>!x.is_wish);
+  wishes=(exp||[]).filter(x=>x.is_wish);
+  const {data:bd}=await sb.from("budgets").select("*").eq("user_id",uid).maybeSingle();
+  budget=bd?{amount:Number(bd.amount),start:bd.start_month,months:bd.months}:null;
+  const {data:tc}=await sb.from("tag_colors").select("*").eq("user_id",uid).maybeSingle();
+  tagColors=(tc&&tc.colors)||{};
+  render();
+}
+function mapRow(r){return {id:r.id,amount:Number(r.amount),name:r.name,cat:r.cat||"",date:r.date,w:r.is_wish};}
+async function add(o){
+  const row={amount:o.amount,name:o.name,cat:o.cat||"",date:o.date||null,is_wish:!!o.w,user_id:uid};
+  const {data,error}=await sb.from("expenses").insert(row).select().single();
+  if(error){$("st").textContent="Salvataggio non riuscito, riprova";return}
+  const m=mapRow(data);
+  if(m.w)wishes.push(m);else items.push(m);
+  render();
+}
+async function update(id,p){
+  const patch={};
+  if("amount" in p)patch.amount=p.amount;
+  if("name" in p)patch.name=p.name;
+  if("cat" in p)patch.cat=p.cat;
+  if("date" in p)patch.date=p.date;
+  const {error}=await sb.from("expenses").update(patch).eq("id",id);
+  if(error){$("st").textContent="Salvataggio non riuscito, riprova";return}
+  const a=items.find(x=>x.id===id)||wishes.find(x=>x.id===id);
+  if(a)Object.assign(a,p);
+  render();
+}
+async function del(id){
+  const {error}=await sb.from("expenses").delete().eq("id",id);
+  if(error){$("st").textContent="Eliminazione non riuscita, riprova";return}
+  items=items.filter(i=>i.id!==id);wishes=wishes.filter(i=>i.id!==id);
+  render();
+}
+async function saveTagColor(cat,color){
+  tagColors[cat]=color;
+  const {error}=await sb.from("tag_colors").upsert({user_id:uid,colors:tagColors});
+  if(error)$("st").textContent="Salvataggio non riuscito, riprova";
+  renderTags();if(view==="cats")render();
+}
+async function renameCategory(oldName,newName){
+  const affected=items.filter(i=>i.cat===oldName);
+  for(const it of affected){await sb.from("expenses").update({cat:newName}).eq("id",it.id)}
+  affected.forEach(i=>i.cat=newName);
+  if(tagColors[oldName]){tagColors[newName]=tagColors[oldName];delete tagColors[oldName];
+    await sb.from("tag_colors").upsert({user_id:uid,colors:tagColors});}
+  render();
+}
+async function saveBudget(a,m){
+  budget={amount:a,start:today.slice(0,7),months:m};
+  const {error}=await sb.from("budgets").upsert({user_id:uid,amount:a,start_month:budget.start,months:m});
+  if(error)$("st").textContent="Salvataggio non riuscito, riprova";
+  render();
+}
+async function removeBudget(){
+  budget=null;
+  await sb.from("budgets").delete().eq("user_id",uid);
+  render();
+}
+
+/* ---------- rendering (same as before) ---------- */
+function monthTotal(){const c=today.slice(0,7);return items.filter(i=>i.date&&i.date.startsWith(c)).reduce((s,i)=>s+i.amount,0)}
+function activeBudget(){
+  if(!budget)return null;
+  const[sy,sm]=budget.start.split("-").map(Number),[cy,cm]=today.slice(0,7).split("-").map(Number);
+  const d=(cy-sy)*12+(cm-sm);
+  return d>=0&&(budget.months===0||d<budget.months)?budget:null;
+}
+function renderBar(){
+  const b=activeBudget(),el=$("bud");
+  if(!b){el.innerHTML="";return}
+  const sp=monthTotal(),pct=sp/b.amount,cls=pct>=1?"over":pct>=.8?"warn":"",sc=Math.max(sp,b.amount);
+  const msg=pct>=1?`Superato di ${fmt(sp-b.amount)}`:pct>=.8?`Restano solo ${fmt(b.amount-sp)}`:`Restano ${fmt(b.amount-sp)}`;
+  el.innerHTML=`<div class="bt ${cls}"><div class="bf" style="width:${sp/sc*100}%"></div>${sp>b.amount?`<div class="bl" style="left:${b.amount/sc*100}%"></div>`:""}</div><div class="bm ${cls}">${msg}</div>`;
+}
+function renderBudgetView(){
+  let st='<div class="d" style="margin-bottom:10px">Nessun budget impostato. \u00c8 facoltativo.</div>';
+  if(budget){
+    const[sy,sm]=budget.start.split("-").map(Number);
+    const end=new Date(sy,sm-1+(budget.months||1)-1,1).toLocaleDateString("it-IT",{month:"long",year:"numeric"});
+    const txt=budget.months===0?"senza scadenza":"fino a "+end;
+    st=`<div class="row" style="display:block"><div class="n">${fmt(budget.amount)} al mese</div><div class="d">${activeBudget()?"Attivo":"Scaduto"}, ${txt}</div><button class="tag${armKey==="bd"?" on":""}" id="bdel" style="margin-top:10px">${armKey==="bd"?"Rimuovere davvero?":"Rimuovi budget"}</button></div>`;
+  }
+  const opt=[...Array.from({length:12},(_,i)=>[i+1,i?`${i+1} mesi`:"1 mese"]),[0,"Sempre"]].map(([v,l])=>`<option value="${v}"${budget&&budget.months===v?" selected":""}>${l}</option>`).join("");
+  const coin='<circle cx="12" cy="12" r="9"/><path d="M14.5 8.3A4.6 4.6 0 1014.5 15.7M7.2 10.4h6M7.2 13h5.2" fill="none" stroke="#2B2E34" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>';
+  $("list").innerHTML=st+`<h2><span class="coin"><svg viewBox="0 0 24 24">${coin}</svg></span> ${budget?"Cambia budget":"Imposta budget"}</h2><div style="display:grid;gap:10px"><input id="bamt" type="number" inputmode="decimal" placeholder="Massimo al mese \u20ac" value="${budget?budget.amount:""}"><select id="bdur">${opt}</select><div class="d">Parte da questo mese e si azzera ogni mese per la durata scelta.</div><button class="go" id="bsave">Salva budget</button></div>`;
+}
+function renderWish(){
+  const now=new Date(),m0=iso(new Date(now.getFullYear(),now.getMonth(),1));
+  const mt=items.filter(i=>i.date>=m0).reduce((s,i)=>s+i.amount,0);
+  const ch=wishes.filter(w=>sel.has(w.id)),ct=ch.reduce((s,w)=>s+w.amount,0);
+  const ab=activeBudget(),aft=mt+ct;
+  const bmsg=ab&&ch.length?(aft>ab.amount?`<div class="bm over">Supereresti il budget di ${fmt(aft-ab.amount)}</div>`:aft>=ab.amount*.8?`<div class="bm warn">Ti resterebbero solo ${fmt(ab.amount-aft)} di budget</div>`:`<div class="bm">Ti resterebbero ${fmt(ab.amount-aft)} di budget</div>`):"";
+  const sum=ch.length?`<div class="row" style="display:block"><div class="d">Se compri ${ch.length===1?"questo prodotto":"questi "+ch.length+" prodotti"}</div><div class="amt${ab&&aft>ab.amount?" overc":""}" style="font-size:22px">${fmt(mt)} \u2192 ${fmt(mt+ct)}</div><div class="d">spesa del mese, con ${fmt(ct)} in pi\u00f9</div>${bmsg}</div>`:'<div class="d" style="margin-bottom:10px">Tocca un prodotto per vedere cosa cambia nel mese.</div>';
+  const rows=[...wishes].sort((x,y)=>y.amount-x.amount).map(w=>`<div class="row${sel.has(w.id)?" pick":""}" data-w="${w.id}" style="cursor:pointer"><div class="n">${esc(w.name)}</div><div style="display:flex;align-items:center"><span class="amt">${fmt(w.amount)}</span><button class="x" data-wedit="${w.id}" aria-label="Modifica">\u270e</button><button class="x${armKey==="b"+w.id?" armed":""}" data-buy="${w.id}" aria-label="Comprato">${armKey==="b"+w.id?"Comprato?":"\u2713"}</button><button class="x${armKey==="w"+w.id?" armed":""}" data-wdel="${w.id}" aria-label="Elimina">${armKey==="w"+w.id?"Elimina?":"\u00d7"}</button></div></div>`).join("");
+  $("list").innerHTML=sum+(rows||'<div class="empty">La wishlist \u00e8 vuota. Aggiungi con il +</div>');
+}
+async function buy(id){
+  const w=wishes.find(x=>x.id===id);if(!w)return;
+  sel.delete(id);await add({amount:w.amount,name:w.name,cat:"",date:today});await del(id);
+}
+function two(key,fn){
+  if(armKey===key){armKey=null;fn();return}
+  armKey=key;render();
+  setTimeout(()=>{if(armKey===key){armKey=null;render()}},3000);
+}
+function render(){
+  renderBar();$("add").style.display=view==="budget"?"none":"";
+  const[a,b]=bounds();
+  {const f=$("from").value,t=$("to").value;
+  $("plabel").innerHTML=!f&&!t?monthName():(f&&t?dl(f)+" \u2013 "+dl(t):f?dl(f)+" \u2013 oggi":"fino al "+dl(t))+'<button class="clr" id="pclr" aria-label="Rimuovi filtro">\u00d7</button>'}
+  $("cal").style.display=view==="cal"?"block":"none";
+  if(view==="cal"){$("list").innerHTML="";return}
+  if(view==="budget"){renderBudgetView();return}
+  if(view==="wish"){renderWish();return}
+  let inr=items.filter(i=>i.date>=a&&i.date<=b);
+  if(view==="items"&&catFilter)inr=inr.filter(i=>(i.cat||"Senza categoria")===catFilter);
+  $("total").innerHTML=hero(inr.reduce((s,i)=>s+i.amount,0));
+  $("fbar").innerHTML=view==="items"&&catFilter?`<button class="tag on" id="clr">${esc(catFilter)} \u00d7</button>`:"";
+  const none='<div class="empty">Nessuna spesa in questo periodo</div>';
+  if(view==="cats"){
+    const g={};
+    inr.forEach(i=>{const k=i.cat||"Senza categoria";g[k]=g[k]||{t:0,n:0};g[k].t+=i.amount;g[k].n++});
+    const ks=Object.keys(g).sort((x,y)=>g[y].t-g[x].t);
+    const mx=ks[0]?g[ks[0]].t:1;
+    $("list").innerHTML=ks.length?ks.map(k=>`<div class="row" data-k="${esc(k)}" style="cursor:pointer;border-left:12px solid ${tagColors[k]||"#C2D1D9"}"><div><div class="n">${esc(k)}</div><div class="d">${g[k].n} ${g[k].n===1?"acquisto":"acquisti"}</div></div><span class="amt">${fmt(g[k].t)}</span></div>`).join(""):none;
+    return;
+  }
+  inr.sort((x,y)=>y.amount-x.amount);
+  $("list").innerHTML=inr.length?inr.slice(0,15).map(i=>`<div class="row" data-e="${i.id}" style="cursor:pointer"><div><div class="n">${esc(i.name)}</div><div class="d">${i.date.split("-").reverse().join("/")}${i.cat?" \u00b7 "+esc(i.cat):""}</div></div><div style="display:flex;align-items:center"><span class="amt">${fmt(i.amount)}</span><button class="x${armKey==="d"+i.id?" armed":""}" data-id="${i.id}" aria-label="Elimina">${armKey==="d"+i.id?"Elimina?":"\u00d7"}</button></div></div>`).join(""):none;
+}
+function setView(v){
+  view=v;if(v==="cats")catFilter=null;
+  document.querySelectorAll(".seg").forEach(x=>x.classList.toggle("on",x.dataset.v===v));
+  render();
+}
+document.querySelectorAll(".seg").forEach(x=>x.onclick=()=>setView(x.dataset.v));
+$("fbar").onclick=()=>{catFilter=null;render()};
+$("from").onchange=$("to").onchange=render;
+
+function renderTags(){
+  const c={};items.forEach(i=>{if(i.cat)c[i.cat]=(c[i.cat]||0)+1});
+  const v=$("cat").value.trim();
+  $("tags").innerHTML=Object.keys(c).sort((a,b)=>c[b]-c[a]).map(k=>`<span class="tagwrap"><button type="button" class="tag${k===v?" on":""}" data-c="${esc(k)}"><span class="dot" style="background:${tagColors[k]||"#C2D1D9"}"></span>${esc(k)}</button><button type="button" class="ec" data-ec="${esc(k)}" aria-label="Modifica categoria">\u270e</button></span>`).join("");
+  renderSwatches();
+}
+$("tags").onclick=e=>{const b=e.target.closest(".tag");if(!b)return;$("cat").value=$("cat").value.trim()===b.dataset.c?"":b.dataset.c;renderTags()};
+function renderSwatches(){
+  const v=$("cat").value.trim();
+  $("swatches").style.display=v?"flex":"none";
+  $("swatches").innerHTML=v?PALETTE.map(c=>`<button type="button" class="sw${tagColors[v]===c?" on":""}" data-sw="${c}" style="background:${c}"></button>`).join(""):"";
+}
+$("swatches").onclick=e=>{const b=e.target.closest("[data-sw]");if(!b)return;saveTagColor($("cat").value.trim(),b.dataset.sw)};
+$("tags").addEventListener("click",e=>{
+  const ec=e.target.closest("[data-ec]");if(!ec)return;
+  renamingCat=ec.dataset.ec;$("cat").value=renamingCat;renderSwatches();
+  $("renameInput").value=renamingCat;$("renameBox").style.display="flex";$("renameInput").focus();
+});
+$("renameGo").onclick=async()=>{
+  const nn=$("renameInput").value.trim();
+  if(!nn||!renamingCat){$("renameBox").style.display="none";return}
+  if(nn!==renamingCat)await renameCategory(renamingCat,nn);
+  renamingCat=null;$("renameBox").style.display="none";$("cat").value=nn;renderTags();
+};
+$("cat").oninput=()=>{renderTags();renderSwatches()};
+
+async function openEdit(id){
+  const it=items.find(x=>x.id===id)||wishes.find(x=>x.id===id);if(!it)return;
+  editId=id;adding=it.w?"wish":"exp";
+  const h=adding==="wish"?"none":"";$("date").style.display=$("cat").style.display=$("tags").style.display=h;
+  $("name").placeholder=adding==="wish"?"Cosa vorresti comprare?":"Cosa hai comprato?";
+  $("amt").value=it.amount;$("name").value=it.name;$("cat").value=it.cat||"";$("date").value=it.date||today;
+  $("save").textContent="Salva modifiche";
+  renderTags();$("sheet").classList.add("show");
+}
+function closeSheet(){$("sheet").classList.remove("show");["amt","name","cat"].forEach(k=>$(k).value="");editId=null;$("save").textContent="Salva";renderTags()}
+$("sheet").onclick=e=>{if(e.target===$("sheet"))closeSheet()};
+
+$("list").onclick=e=>{
+  if(e.target.closest("#bsave")){const a=parseFloat($("bamt").value.replace(",","."));if(a>0)saveBudget(a,parseInt($("bdur").value,10));else $("bamt").focus();return}
+  if(e.target.closest("#bdel")){two("bd",removeBudget);return}
+  if(view==="wish"){
+    const by=e.target.closest("[data-buy]");if(by){two("b"+by.dataset.buy,()=>buy(by.dataset.buy));return}
+    const we=e.target.closest("[data-wedit]");if(we){openEdit(we.dataset.wedit);return}
+    const wd=e.target.closest("[data-wdel]");if(wd){two("w"+wd.dataset.wdel,()=>{sel.delete(wd.dataset.wdel);del(wd.dataset.wdel)});return}
+    const wr=e.target.closest(".row[data-w]");if(wr){const k=wr.dataset.w;sel.has(k)?sel.delete(k):sel.add(k);render();return}
+    return;
+  }
+  const r=e.target.closest(".row[data-k]");if(r){catFilter=r.dataset.k;setView("items");return}
+  const b=e.target.closest(".x");if(b){two("d"+b.dataset.id,()=>del(b.dataset.id));return}
+  const er=e.target.closest(".row[data-e]");if(er)openEdit(er.dataset.e);
+};
+
+$("add").onclick=()=>{
+  editId=null;$("save").textContent="Salva";
+  adding=view==="wish"?"wish":"exp";
+  const h=adding==="wish"?"none":"";$("date").style.display=$("cat").style.display=$("tags").style.display=h;
+  $("name").placeholder=adding==="wish"?"Cosa vorresti comprare?":"Cosa hai comprato?";
+  $("date").value=today;renderTags();
+  $("sheet").classList.add("show");$("amt").focus();
+};
+$("save").onclick=async()=>{
+  const amount=parseFloat($("amt").value.replace(",","."));
+  if(!(amount>0)||!$("name").value.trim()){$("amt").focus();return}
+  if(editId){await update(editId,adding==="wish"?{amount,name:$("name").value.trim()}:{amount,name:$("name").value.trim(),cat:$("cat").value.trim(),date:$("date").value||today});closeSheet();return}
+  if(adding==="wish")await add({amount,name:$("name").value.trim(),w:true,date:today});
+  else await add({amount,name:$("name").value.trim(),cat:$("cat").value.trim(),date:$("date").value||today});
+  ["amt","name","cat"].forEach(k=>$(k).value="");
+  $("sheet").classList.remove("show");
+};
+$("plabel").onclick=e=>{if(e.target.closest("#pclr")){$("from").value="";$("to").value="";render()}};
+
+/* ---------- import CSV ---------- */
+function parseCSV(text){
+  const rows=[];let row=[],f="",q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else{if(c==='"')q=true;else if(c===','){row.push(f);f=""}else if(c==='\\n'||c==='\\r'){if(c==='\\r'&&text[i+1]==='\\n')i++;row.push(f);rows.push(row);row=[];f=""}else f+=c}
+  }
+  if(f.length||row.length){row.push(f);rows.push(row)}
+  return rows.filter(r=>r.length>1);
+}
+function nextColor(){
+  const used=new Set(Object.values(tagColors));
+  return PALETTE.find(c=>!used.has(c))||PALETTE[Object.keys(tagColors).length%PALETTE.length];
+}
+$("impbtn").onclick=()=>$("imp").click();
+$("imp").onchange=async e=>{
+  const file=e.target.files[0];if(!file)return;
+  const text=await file.text();
+  const rows=parseCSV(text);
+  const head=rows[0].map(h=>h.trim().toLowerCase());
+  const iDate=head.indexOf("date"),iNote=head.indexOf("note"),iAmt=head.indexOf("amount"),iCat=head.indexOf("category"),iType=head.indexOf("type");
+  const data=rows.slice(1).filter(r=>iType<0||(r[iType]||"").trim().toLowerCase()==="expense");
+  let done=0;
+  for(const r of data){
+    const amount=parseFloat((r[iAmt]||"0").replace(",","."));
+    if(!(amount>0))continue;
+    const name=(r[iNote]||"Spesa").trim()||"Spesa";
+    const cat=(r[iCat]||"").trim();
+    const dRaw=(r[iDate]||"").trim();
+    const date=/^\\d{4}-\\d{2}-\\d{2}/.test(dRaw)?dRaw.slice(0,10):today;
+    if(cat&&!tagColors[cat]){tagColors[cat]=nextColor();await sb.from("tag_colors").upsert({user_id:uid,colors:tagColors});}
+    await add({amount,name,cat,date});
+    done++;$("st").textContent="Importazione: "+done+"/"+data.length;
+  }
+  $("st").textContent="Importate "+done+" spese";
+  e.target.value="";
+};
+
+/* ---------- auth ---------- */
+let mode="signin";
+$("aswitch").onclick=()=>{
+  mode=mode==="signin"?"signup":"signin";
+  $("authsub").textContent=mode==="signin"?"Accedi per vedere le tue spese.":"Crea un account per iniziare.";
+  $("ago").textContent=mode==="signin"?"Accedi":"Registrati";
+  $("aswitch").textContent=mode==="signin"?"Non hai un account? Registrati":"Hai gi\u00e0 un account? Accedi";
+  $("autherr").style.display="none";
+};
+$("ago").onclick=async()=>{
+  const email=$("aemail").value.trim(),pass=$("apass").value;
+  $("autherr").style.display="none";
+  if(!email||!pass){$("autherr").textContent="Inserisci email e password";$("autherr").style.display="block";return}
+  $("ago").disabled=true;
+  const fn=mode==="signin"?sb.auth.signInWithPassword({email,password:pass}):sb.auth.signUp({email,password:pass});
+  const {data,error}=await fn;
+  $("ago").disabled=false;
+  if(error){$("autherr").textContent=error.message;$("autherr").style.display="block";return}
+  if(mode==="signup"&&!data.session){$("autherr").textContent="Controlla la tua email per confermare l'account, poi accedi.";$("autherr").style.display="block";mode="signin";$("ago").textContent="Accedi";$("aswitch").textContent="Non hai un account? Registrati";return}
+};
+$("logout").onclick=()=>sb.auth.signOut();
+
+let channel=null;
+async function enterApp(session){
+  uid=session.user.id;
+  $("authwrap").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  $("dock").classList.remove("hidden");
+  $("add").classList.remove("hidden");
+  $("authtop").classList.remove("hidden");
+  await loadAll();
+  channel=sb.channel("expenses-"+uid)
+    .on("postgres_changes",{event:"*",schema:"public",table:"expenses",filter:"user_id=eq."+uid},()=>loadAll())
+    .on("postgres_changes",{event:"*",schema:"public",table:"budgets",filter:"user_id=eq."+uid},()=>loadAll())
+    .on("postgres_changes",{event:"*",schema:"public",table:"tag_colors",filter:"user_id=eq."+uid},()=>loadAll())
+    .subscribe();
+}
+function leaveApp(){
+  uid=null;items=[];wishes=[];budget=null;tagColors={};
+  if(channel){sb.removeChannel(channel);channel=null}
+  $("app").classList.add("hidden");
+  $("dock").classList.add("hidden");
+  $("add").classList.add("hidden");
+  $("authtop").classList.add("hidden");
+  $("authwrap").classList.remove("hidden");
+}
+sb.auth.onAuthStateChange((event,session)=>{
+  if(session)enterApp(session);else leaveApp();
+});
+sb.auth.getSession().then(({data})=>{if(data.session)enterApp(data.session)});
+</script>
+</body>
+</html>
